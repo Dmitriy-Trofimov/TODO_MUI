@@ -2,7 +2,7 @@ import Title from './components/Title';
 import BoxMain from './components/BoxMain';
 import AddTask from './components/AddTask';
 
-
+import { TaskSection } from './components/AddTask';
 
 export default function AppToDo() {
 
@@ -14,6 +14,8 @@ export default function AppToDo() {
       </Title>
 
       <AddTask/>
+      <TaskSection/>
+      
     </BoxMain>
   )
 }
