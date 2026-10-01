@@ -87,7 +87,6 @@ export default function AddTask () {
 /////////////////////////////////////////////////     ДОБАВЛЕННЫЕ ЗАДАЧИ     ////////////////////////////////
 
 
-const planList = initialTasks.filter(task => task.isDone === false);
 const readyList = initialTasks.filter(task => task.isDone === true)
 
 
@@ -120,6 +119,32 @@ import ListItemText from '@mui/material/ListItemText';
 
 export function TaskPlan () {
 
+  const filteredPlanList = initialTasks.filter(task => task.isDone === false);
+  const [planList, setPlanList] = useState(filteredPlanList);
+
+
+  const handleSetIsDone = (id) => {
+
+    const nextTasks = planList.map(task => 
+      task.id === id
+      ? { ...task, isDone: !task.isDone } 
+      : task
+    )
+
+    setPlanList(nextTasks);
+    console.log(nextTasks);
+  }
+
+
+  const handleDeleteTask = (id) => {
+
+    const updatedPlanList = planList.filter(task => task.id !== id);
+    setPlanList(updatedPlanList);
+
+  }
+
+
+
   if (planList.length > 0) {
     return (
       <Box sx={{
@@ -146,8 +171,11 @@ export function TaskPlan () {
                   <IconButton edge="end">
                     <EditIcon color='primary'/>
                   </IconButton>
-                  <IconButton edge="end">
-                    <DeleteIcon color="error" />
+                  <IconButton 
+                    edge="end"  
+                    onClick={() => handleDeleteTask(task.id)}
+                    >
+                    <DeleteIcon color="error"/>
                   </IconButton> 
                 </Box>
               }                
@@ -157,7 +185,8 @@ export function TaskPlan () {
                 <ListItemIcon>
                   <Checkbox
                     edge="start"
-                    // checked={true}
+                    checked={task.isDone}
+                    onChange={() => handleSetIsDone(task.id)}
                   />
                 </ListItemIcon>
                 <ListItemText primary={task.name} />
