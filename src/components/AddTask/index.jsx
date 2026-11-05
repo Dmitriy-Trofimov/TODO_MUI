@@ -8,7 +8,13 @@ import Typography from '@mui/material/Typography';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Checkbox from '@mui/material/Checkbox';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
+import DoneIcon from '@mui/icons-material/Done';
 
 
 
@@ -37,7 +43,7 @@ export default function AddTask () {
       {id: nextId++, name: inputText, isDone: false}
     ]);
 
-    console.log(task[task.length-1].name);
+    console.log(inputText);
     setInputText(cleanInput);
   }
  
@@ -71,12 +77,7 @@ export default function AddTask () {
               </InputAdornment>
             ),
           },
-          
-        }}
-
-
-
-        
+        }}       
       /> 
     </Box>
   );
@@ -84,10 +85,7 @@ export default function AddTask () {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////     ДОБАВЛЕННЫЕ ЗАДАЧИ     ////////////////////////////////
-
-
-const readyList = initialTasks.filter(task => task.isDone === true)
+/////////////////////////////////////////////     ПЛАН / ГОТОВО (TaskList)  ////////////////////////////////
 
 
 
@@ -97,22 +95,10 @@ export function TaskSection () {
   return (
     <Box sx={{ mt: '40px', }}>
       <TaskPlan/>
-      {/* <TaskReady/>  */} 
+      <TaskReady/>  
     </Box>
   )
 } 
-
-
-
-
-
-
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import Checkbox from '@mui/material/Checkbox';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
 
 
 
@@ -122,6 +108,8 @@ export function TaskPlan () {
   const filteredPlanList = initialTasks.filter(task => task.isDone === false);
   const [planList, setPlanList] = useState(filteredPlanList);
 
+  const [editingTaskId, setEditingTaskId] = useState(null); 
+  const [editText, setEditText] = useState(''); 
 
   const handleSetIsDone = (id) => {
 
@@ -140,15 +128,35 @@ export function TaskPlan () {
 
     const updatedPlanList = planList.filter(task => task.id !== id);
     setPlanList(updatedPlanList);
-
   }
 
 
+  const handleStartEdit = (task) => {
+    setEditingTaskId(task.id);
+    setEditText(task.name);
+  };
 
-  if (planList.length > 0) {
+
+  const handleSaveEdit = () => {
+    if (!editText.trim()) return;
+
+    const updatedList = planList.map(task => 
+      task.id === editingTaskId ? { ...task, name: editText } : task
+    );
+    
+    setPlanList(updatedList);
+    setEditingTaskId(null); 
+    setEditText('');        
+  };
+
+  
+
+    if (planList.length === 0) {
+      return null; 
+    }
+
     return (
-      <Box sx={{
-        width: 490}}
+      <Box sx={{ width: 490 }}
       >
 
         <Typography variant='h4'
@@ -156,82 +164,157 @@ export function TaskPlan () {
             color: 'gray',
             ml: '215px',
             fontSize: '15px'
-
           }}  
         >
-            План: ({planList.length})
+          ПЛАН: ({planList.length})
         </Typography>
 
         <List>
-          {planList.map(task => 
+          {planList.map(task => {
+  
+            const isEditingThisTask = task.id === editingTaskId;
+
+            if (isEditingThisTask) 
+              return (
+                <ListItem key={task.id} sx={{ px: 2 }}>
+                  <TextField 
+                    id={`edit-input-${task.id}`}
+                    variant="standard" 
+                    value={editText} 
+                    onChange={(e) => setEditText(e.target.value)}
+                    autoFocus 
+                    sx={{ width: '100%' }}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton 
+                              onClick={handleSaveEdit} 
+                              sx={{ borderRadius: '11px' }}
+                            >
+                              <DoneIcon color='primary' />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}       
+                  /> 
+                </ListItem>
+              );
+            
+
+            return (
+              <ListItem 
+                key={task.id}
+                secondaryAction={
+                  <Box>
+                    <IconButton 
+                      edge="end" 
+                      onClick={() => handleStartEdit(task)}
+                    >
+                      <EditIcon color='primary'/>
+                    </IconButton>
+                    <IconButton 
+                      edge="end"  
+                      onClick={() => handleDeleteTask(task.id)}
+                    >
+                      <DeleteIcon color="error"/>
+                    </IconButton> 
+                  </Box>
+                }                
+              >
+                <ListItemButton>
+                  <ListItemIcon>
+                    <Checkbox
+                      edge="start"
+                      checked={task.isDone}
+                      onChange={() => handleSetIsDone(task.id)}
+                    />
+                  </ListItemIcon>
+                  <ListItemText primary={task.name} />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+
+      </Box>
+    );
+  }
+
+
+
+
+export function TaskReady () {
+
+  const filteredReadyList = initialTasks.filter(task => task.isDone === true)
+
+  const [readyList, setReadyList] = useState(filteredReadyList);
+
+  const handleDeleteTask = (id) => {
+    const updatedReadyList = readyList.filter(task => task.id !== id);
+    setReadyList(updatedReadyList);
+  } 
+
+  if (readyList.length === 0) {
+    return null; 
+  }
+
+  return (
+    <Box sx={{ width: 490 }}
+    >
+
+      <Typography variant='h4'
+        sx={{
+          color: 'gray',
+          ml: '215px',
+          fontSize: '15px'
+        }}  
+      >
+        ГОТОВО: ({readyList.length})
+      </Typography>
+
+      <List>
+        {readyList.map(task => {
+
+          return (
             <ListItem 
               key={task.id}
               secondaryAction={
                 <Box>
-                  <IconButton edge="end">
-                    <EditIcon color='primary'/>
-                  </IconButton>
                   <IconButton 
                     edge="end"  
                     onClick={() => handleDeleteTask(task.id)}
-                    >
+                  >
                     <DeleteIcon color="error"/>
                   </IconButton> 
                 </Box>
               }                
             >
-
               <ListItemButton>
                 <ListItemIcon>
                   <Checkbox
                     edge="start"
                     checked={task.isDone}
-                    onChange={() => handleSetIsDone(task.id)}
                   />
                 </ListItemIcon>
                 <ListItemText primary={task.name} />
               </ListItemButton>
-
             </ListItem>
-          )}
-        </List>
-      </Box>
-    );
-  }
+          );
+        })}
+      </List>
+
+    </Box>
+  );
 }
 
 
 
 
 
-// export function TaskReady () {
 
 
-//   if (readyList.length > 0) {
-//     return (
-//       <Box sx={{border: '1px solid black', mt: '40px', }}>
-
-//         <Typography variant='h4'
-//           sx={{
-//             color: 'gray',
-//             ml: '215px',
-//             fontSize: '15px'
-
-//           }}  
-//         >
-//             План: ({readyList.length})
-//         </Typography>
-
-//           {readyList.map(task => 
-//             <ul key={task.id}>
-//               {task.name}
-
-//             </ul>
-//           )}
-//       </Box>
-//     );
-//   }
-// }
 
 
 
