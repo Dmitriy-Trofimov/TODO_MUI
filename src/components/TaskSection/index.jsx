@@ -7,7 +7,6 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Typography from '@mui/material/Typography';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import Checkbox from '@mui/material/Checkbox';
@@ -15,7 +14,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import DoneIcon from '@mui/icons-material/Done';
-
 
 
 const initialTasks = [
@@ -27,26 +25,81 @@ const initialTasks = [
 
 let nextId = 525;
 
-export default function AddTask () {
 
-  const [inputText, setInputText] = useState('');
+export function TaskSection () {
+
   const [task, setTask] = useState(initialTasks);
+  const planList = task.filter(task => task.isDone === false);
+  const [editingTaskId, setEditingTaskId] = useState(null); 
+  const [editText, setEditText] = useState(''); 
 
-
-  const isEmpty = !inputText.trim();
-  const cleanInput = '';
-
-  const handleAddTask = () => {
-
+  const handleAddTask = (inputText) => {
     setTask([
       ...task,
       {id: nextId++, name: inputText, isDone: false}
     ]);
-
-    console.log(inputText);
-    setInputText(cleanInput);
   }
- 
+
+  const handleSetIsDone = (id) => {
+    const nextTasks = planList.map(task => 
+      task.id === id
+      ? { ...task, isDone: !task.isDone } 
+      : task
+    )
+    setTask(nextTasks);
+  }
+
+  const handleDeleteTask = (id) => {
+    const updatedPlanList = task.filter(task => task.id !== id);
+    setTask(updatedPlanList);
+  }
+
+  const handleStartEdit = (task) => {
+    setEditingTaskId(task.id);
+    setEditText(task.name);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editText.trim()) return;
+
+    const updatedList = task.map(task => 
+      task.id === editingTaskId ? { ...task, name: editText } : task
+    );
+    
+    setTask(updatedList);
+    setEditingTaskId(null); 
+    setEditText('');        
+  };
+
+
+  return (
+    <Box sx={{ mt: '40px' }}>
+      <AddTask 
+        handleAddTask={handleAddTask}
+      />
+
+      <TaskPlan 
+        planList={planList}
+        editText={editText}
+        editingTaskId={editingTaskId}
+        handleDeleteTask={handleDeleteTask} 
+        handleStartEdit={handleStartEdit} 
+        handleSaveEdit={handleSaveEdit}
+        handleSetIsDone={handleSetIsDone}
+        setEditText={setEditText}
+        />
+      <TaskReady />  
+    </Box>
+  )
+} 
+
+
+
+
+export default function AddTask ({ handleAddTask }) {
+
+  const [inputText, setInputText] = useState('');
+  const isEmpty = !inputText.trim();
 
   return (
     <Box  sx={{  m: 1, display: 'flex'  }} >
@@ -68,9 +121,12 @@ export default function AddTask () {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton 
-                  disabled={isEmpty} 
-                  onClick={handleAddTask} 
+                  disabled={isEmpty}
                   sx={{ borderRadius: '11px' }}
+                  onClick={ () => {
+                    handleAddTask(inputText); 
+                    setInputText('');
+                    }} 
                   >
                   <AddIcon />
                 </IconButton>
@@ -84,72 +140,8 @@ export default function AddTask () {
 } 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////     ПЛАН / ГОТОВО (TaskList)  ////////////////////////////////
-
-
-
-
-export function TaskSection () {
-
-  return (
-    <Box sx={{ mt: '40px', }}>
-      <TaskPlan/>
-      <TaskReady/>  
-    </Box>
-  )
-} 
-
-
-
-
-export function TaskPlan () {
-
-  const filteredPlanList = initialTasks.filter(task => task.isDone === false);
-  const [planList, setPlanList] = useState(filteredPlanList);
-
-  const [editingTaskId, setEditingTaskId] = useState(null); 
-  const [editText, setEditText] = useState(''); 
-
-  const handleSetIsDone = (id) => {
-
-    const nextTasks = planList.map(task => 
-      task.id === id
-      ? { ...task, isDone: !task.isDone } 
-      : task
-    )
-
-    setPlanList(nextTasks);
-    console.log(nextTasks);
-  }
-
-
-  const handleDeleteTask = (id) => {
-
-    const updatedPlanList = planList.filter(task => task.id !== id);
-    setPlanList(updatedPlanList);
-  }
-
-
-  const handleStartEdit = (task) => {
-    setEditingTaskId(task.id);
-    setEditText(task.name);
-  };
-
-
-  const handleSaveEdit = () => {
-    if (!editText.trim()) return;
-
-    const updatedList = planList.map(task => 
-      task.id === editingTaskId ? { ...task, name: editText } : task
-    );
-    
-    setPlanList(updatedList);
-    setEditingTaskId(null); 
-    setEditText('');        
-  };
-
-  
+export function TaskPlan ({ handleSetIsDone, handleDeleteTask, handleStartEdit, handleSaveEdit, planList, editingTaskId, editText, setEditText }) {
+ 
 
     if (planList.length === 0) {
       return null; 
