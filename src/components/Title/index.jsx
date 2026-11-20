@@ -1,7 +1,5 @@
 import Typography from '@mui/material/Typography';
 
-
-
 export default function Title ({ children }) {
 
   return (
@@ -17,5 +15,4 @@ export default function Title ({ children }) {
       {children}
     </Typography>
   );
-
 }
